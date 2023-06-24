@@ -18,6 +18,13 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
+    
+    def create(self, validated_data):
+        author = self.context['request'].user.author  # Retrieve the associated Author instance
+        validated_data['author'] = author  # Assign the author to the book
+
+        book = Book.objects.create(**validated_data)
+        return book
 
 
 class PageSerializer(serializers.ModelSerializer):

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
 from .serializers import ObtainJSONWebTokenSerializer, RefreshJSONWebTokenSerializer
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.permissions import IsAuthenticated, BasePermission , AllowAny
 from rest_framework.generics import CreateAPIView
 from rest_framework import status
 
@@ -76,6 +76,38 @@ class IsAuthorOrReadOnly(BasePermission):
         return request.user.is_superuser
 
 
+
+
+class BookList(APIView):
+    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [AllowAny]
+
+    
+    def get(self, request):
+        try:
+            book = Book.objects.all()
+            serializer = BookSerializer(book , many = True)
+            return Response(serializer.data)
+        except Book.DoesNotExist:
+            error_message = 'there is no book to display.'
+            return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+
+
+class BookCreate(APIView):
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+
+
+    def post(self, request):
+        author = request.user.author
+        serializer = BookSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 class BookDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
@@ -111,18 +143,43 @@ class BookDetailView(APIView):
             error_message = 'Book not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
     
+    
+
+
+
+
+
+class PageList(APIView):
+    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [AllowAny]
+
+    
+    def get(self, request):
+        try:
+            page = Page.objects.get()
+            serializer = PageSerializer(page , many = True)
+            return Response(serializer.data)
+        except Page.DoesNotExist:
+            error_message = 'there is no page to display.'
+            return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+
+
+class PageCreate(APIView):
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+
     def post(self, request):
-        serializer = BookSerializer(data=request.data)
+        serializer = PageSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(author=request.user)
-            success_message = 'Book created successfully.'
+            serializer.save()
+            success_message = 'Page created successfully.'
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PageDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
 
-    def get(self, request, page_id):
+    def Retrive(self, request, page_id):
         try:
             page = Page.objects.get(id=page_id)
             serializer = PageSerializer(page)
@@ -154,10 +211,4 @@ class PageDetailView(APIView):
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
     
-    def post(self, request):
-        serializer = PageSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            success_message = 'Page created successfully.'
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
