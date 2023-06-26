@@ -44,10 +44,11 @@ class RefreshJSONWebToken(APIView):
 
 class RegistrationAPIView(CreateAPIView):
     serializer_class = RegistrationSerializer
+    permission_classes = [AllowAny]
 
 class LoginAPIView(APIView):
     serializer_class = LoginSerializer
-
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -79,8 +80,8 @@ class IsAuthorOrReadOnly(BasePermission):
 
 
 class BookList(APIView):
-    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    # permission_classes = [AllowAny]
 
     
     def get(self, request):
@@ -95,7 +96,7 @@ class BookList(APIView):
 
 class BookCreate(APIView):
     permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-
+    # permission_classes = [AllowAny]
 
     def post(self, request):
         author = request.user.author
@@ -109,7 +110,8 @@ class BookCreate(APIView):
 
 
 class BookDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [AllowAny]
 
     def get(self, request, book_id):
         try:
@@ -150,8 +152,8 @@ class BookDetailView(APIView):
 
 
 class PageList(APIView):
-    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    # permission_classes = [AllowAny]
 
     
     def get(self, request):
