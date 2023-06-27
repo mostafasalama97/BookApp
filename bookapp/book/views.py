@@ -42,6 +42,37 @@ class RefreshJSONWebToken(APIView):
         return Response({'token': token})
     
 
+
+
+# class IsAuthorOrReadOnly(BasePermission):
+#     def has_permission(self, request, view):
+#         if request.method in ['GET', 'HEAD', 'OPTIONS']:
+#             return True
+#         return request.user.is_authenticated
+    
+#     def has_object_permission(self, request, view, obj):
+#         if request.method in ['GET', 'HEAD', 'OPTIONS']:
+#             return True
+#         if hasattr(obj, 'user'):
+#             return obj.user == request.user
+#         return request.user.is_superuser
+
+
+from rest_framework.permissions import BasePermission
+
+class IsAuthorOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'DELETE']:
+            return True
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        if request.user.is_authenticated and hasattr(obj, 'user'):
+            return obj.user == request.user
+        return False
+
 class RegistrationAPIView(CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = [AllowAny]
@@ -55,33 +86,9 @@ class LoginAPIView(APIView):
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
-
-
-class IsAuthorOrReadOnly(BasePermission):
-    def has_permission(self, request, view):
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-        return request.user.is_authenticated
-    
-    def has_object_permission(self, request, view, obj):
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-
-        # Check if the object has an attribute named 'user'
-        if hasattr(obj, 'user'):
-            return obj.user == request.user
-
-        # For objects without 'user' attribute, such as 'Page' model
-        # Implement custom logic here based on your requirements
-        # For example, allow only if the user is an admin
-        return request.user.is_superuser
-
-
-
-
 class BookList(APIView):
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-    # permission_classes = [AllowAny]
+    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [AllowAny]
 
     
     def get(self, request):
@@ -97,21 +104,29 @@ class BookList(APIView):
 class BookCreate(APIView):
     permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
     # permission_classes = [AllowAny]
+    # permission_classes = [IsAuthorOrReadOnly]
 
     def post(self, request):
-        author = request.user.author
         serializer = BookSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
+            author = request.user.author
+
+            if not author:
+                error_message = 'User does not have the "author" attribute.'
+                return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
             serializer.save(author=author)
+            success_message = 'Book created successfully.'
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class BookDetailView(APIView):
     # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
+    permission_classes = [IsAuthorOrReadOnly]
+
 
     def get(self, request, book_id):
         try:
