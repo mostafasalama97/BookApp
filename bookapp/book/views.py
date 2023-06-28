@@ -167,48 +167,60 @@ class BookDetailView(APIView):
 
 
 class PageList(APIView):
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
-    # permission_classes = [AllowAny]
+       # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    permission_classes = [AllowAny]
 
     
     def get(self, request):
         try:
-            page = Page.objects.get()
-            serializer = PageSerializer(page , many = True)
+            Page = Page.objects.all()
+            serializer = PageSerializer(Page , many = True)
             return Response(serializer.data)
         except Page.DoesNotExist:
-            error_message = 'there is no page to display.'
+            error_message = 'there is no Page to display.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PageCreate(APIView):
     permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    # permission_classes = [AllowAny]
+    # permission_classes = [IsAuthorOrReadOnly]
 
     def post(self, request):
-        serializer = PageSerializer(data=request.data)
+        serializer = PageSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            author = request.user.author
+
+            if not author:
+                error_message = 'User does not have the "author" attribute.'
+                return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save(author=author)
             success_message = 'Page created successfully.'
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PageDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    # permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    # permission_classes = [AllowAny]
+    permission_classes = [IsAuthorOrReadOnly]
 
-    def Retrive(self, request, page_id):
+
+    def get(self, request, Page_id):
         try:
-            page = Page.objects.get(id=page_id)
-            serializer = PageSerializer(page)
+            Page = Page.objects.get(id=Page_id)
+            serializer = PageSerializer(Page)
             return Response(serializer.data)
         except Page.DoesNotExist:
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
 
-    def put(self, request, page_id):
+    def put(self, request, Page_id):
         try:
-            page = Page.objects.get(id=page_id)
-            serializer = PageSerializer(page, data=request.data)
+            Page = Page.objects.get(id=Page_id)
+            serializer = PageSerializer(Page, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 success_message = 'Page updated successfully.'
@@ -218,14 +230,16 @@ class PageDetailView(APIView):
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
 
-    def delete(self, request, page_id):
+    def delete(self, request, Page_id):
         try:
-            page = Page.objects.get(id=page_id)
-            page.delete()
+            Page = Page.objects.get(id=Page_id)
+            Page.delete()
             success_message = 'Page deleted successfully.'
             return Response(success_message, status=status.HTTP_204_NO_CONTENT)
         except Page.DoesNotExist:
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+    
+    
     
     
