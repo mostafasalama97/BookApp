@@ -173,10 +173,10 @@ class PageList(APIView):
     
     def get(self, request):
         try:
-            Page = Page.objects.all()
-            serializer = PageSerializer(Page , many = True)
+            page = Page.objects.all()
+            serializer = PageSerializer(page , many = True)
             return Response(serializer.data)
-        except Page.DoesNotExist:
+        except page.DoesNotExist:
             error_message = 'there is no Page to display.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
 
@@ -208,19 +208,19 @@ class PageDetailView(APIView):
     permission_classes = [IsAuthorOrReadOnly]
 
 
-    def get(self, request, Page_id):
+    def get(self, request, page_id):
         try:
-            Page = Page.objects.get(id=Page_id)
-            serializer = PageSerializer(Page)
+            page = Page.objects.get(id=page_id)
+            serializer = PageSerializer(page)
             return Response(serializer.data)
-        except Page.DoesNotExist:
+        except page.DoesNotExist:
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
 
-    def put(self, request, Page_id):
+    def put(self, request, page_id):
         try:
-            Page = Page.objects.get(id=Page_id)
-            serializer = PageSerializer(Page, data=request.data)
+            page = Page.objects.get(id=page_id)
+            serializer = PageSerializer(page, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 success_message = 'Page updated successfully.'
@@ -230,13 +230,13 @@ class PageDetailView(APIView):
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
 
-    def delete(self, request, Page_id):
+    def delete(self, request, page_id):
         try:
-            Page = Page.objects.get(id=Page_id)
-            Page.delete()
+            page = Page.objects.get(id=page_id)
+            page.delete()
             success_message = 'Page deleted successfully.'
             return Response(success_message, status=status.HTTP_204_NO_CONTENT)
-        except Page.DoesNotExist:
+        except page.DoesNotExist:
             error_message = 'Page not found.'
             return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
     

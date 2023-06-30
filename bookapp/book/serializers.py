@@ -32,8 +32,11 @@ class PageSerializer(serializers.ModelSerializer):
         model = Page
         fields = '__all__'
 
-
-
+    def create(self, validated_data):
+        author = validated_data.pop('author', None)  # Remove 'author' key from validated_data
+        validated_data['book'] = Book.objects.get(id=validated_data['book'].id)
+        page = Page.objects.create(**validated_data)
+        return page
 
 
 class ObtainJSONWebTokenSerializer(serializers.Serializer):
